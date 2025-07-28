@@ -2,33 +2,56 @@
 
 namespace Ingenius\Orders\Policies;
 
-use Ingenius\Auth\Models\User;
 use Ingenius\Orders\Constants\OrderPermissions;
 use Ingenius\Orders\Models\Order;
 
 class OrderPolicy
 {
-    public function viewAny(User $user): bool
+    public function viewAny($user): bool
     {
-        return $user->can(OrderPermissions::ORDER_VIEW_ANY);
+        $userClass = tenant_user_class();
+
+        if ($user && is_object($user) && is_a($user, $userClass)) {
+            return $user->can(OrderPermissions::ORDER_VIEW_ANY);
+        }
+
+        return false;
     }
 
-    public function view(?User $user, Order $order): bool
+    public function view($user, Order $order): bool
     {
         if (!$user) {
             return $order->session_id === session()->getId();
         }
 
-        return $user->can(OrderPermissions::ORDER_VIEW_ANY) || ($order->userable_id === $user->id && $order->userable_type === get_class($user));
+        $userClass = tenant_user_class();
+
+        if (is_object($user) && is_a($user, $userClass)) {
+            return $user->can(OrderPermissions::ORDER_VIEW_ANY) || ($order->userable_id === $user->id && $order->userable_type === get_class($user));
+        }
+
+        return false;
     }
 
-    public function delete(User $user, Order $_): bool
+    public function delete($user, Order $_): bool
     {
-        return $user->can(OrderPermissions::ORDER_DELETE);
+        $userClass = tenant_user_class();
+
+        if ($user && is_object($user) && is_a($user, $userClass)) {
+            return $user->can(OrderPermissions::ORDER_DELETE);
+        }
+
+        return false;
     }
 
-    public function changeStatus(User $user, Order $_): bool
+    public function changeStatus($user, Order $_): bool
     {
-        return $user->can(OrderPermissions::ORDER_CHANGE_STATUS);
+        $userClass = tenant_user_class();
+
+        if ($user && is_object($user) && is_a($user, $userClass)) {
+            return $user->can(OrderPermissions::ORDER_CHANGE_STATUS);
+        }
+
+        return false;
     }
 }
