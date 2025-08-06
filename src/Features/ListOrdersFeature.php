@@ -13,7 +13,12 @@ class ListOrdersFeature implements FeatureInterface
 
     public function getName(): string
     {
-        return 'List orders';
+        return __('List orders');
+    }
+
+    public function getGroup(): string
+    {
+        return __('Orders');
     }
 
     public function getPackage(): string

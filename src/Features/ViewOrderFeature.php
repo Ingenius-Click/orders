@@ -13,7 +13,12 @@ class ViewOrderFeature implements FeatureInterface
 
     public function getName(): string
     {
-        return 'View order';
+        return __('View order');
+    }
+
+    public function getGroup(): string
+    {
+        return __('Orders');
     }
 
     public function getPackage(): string

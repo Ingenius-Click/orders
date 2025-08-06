@@ -13,7 +13,12 @@ class CreateOrderFeature implements FeatureInterface
 
     public function getName(): string
     {
-        return 'Create order';
+        return __('Create order');
+    }
+
+    public function getGroup(): string
+    {
+        return __('Orders');
     }
 
     public function getPackage(): string

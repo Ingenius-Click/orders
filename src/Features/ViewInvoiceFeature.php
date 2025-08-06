@@ -13,7 +13,12 @@ class ViewInvoiceFeature implements FeatureInterface
 
     public function getName(): string
     {
-        return 'View invoice';
+        return __('View invoice');
+    }
+
+    public function getGroup(): string
+    {
+        return __('Orders');
     }
 
     public function getPackage(): string

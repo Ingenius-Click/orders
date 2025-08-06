@@ -13,7 +13,12 @@ class UpdateOrderFeature implements FeatureInterface
 
     public function getName(): string
     {
-        return 'Update order';
+        return __('Update order');
+    }
+
+    public function getGroup(): string
+    {
+        return __('Orders');
     }
 
     public function getPackage(): string

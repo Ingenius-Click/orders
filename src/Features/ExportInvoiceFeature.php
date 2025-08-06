@@ -13,7 +13,12 @@ class ExportInvoiceFeature implements FeatureInterface
 
     public function getName(): string
     {
-        return 'Export invoice';
+        return __('Export invoice');
+    }
+
+    public function getGroup(): string
+    {
+        return __('Orders');
     }
 
     public function getPackage(): string

@@ -13,7 +13,12 @@ class ListInvoicesFeature implements FeatureInterface
 
     public function getName(): string
     {
-        return 'List invoices';
+        return __('List invoices');
+    }
+
+    public function getGroup(): string
+    {
+        return __('Orders');
     }
 
     public function getPackage(): string

@@ -13,7 +13,12 @@ class ManualInvoiceFeature implements FeatureInterface
 
     public function getName(): string
     {
-        return 'Create manual invoices';
+        return __('Create manual invoices');
+    }
+
+    public function getGroup(): string
+    {
+        return __('Orders');
     }
 
     public function getPackage(): string
