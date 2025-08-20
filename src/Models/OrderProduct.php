@@ -25,6 +25,10 @@ class OrderProduct extends Model
         'metadata',
     ];
 
+    protected $appends = [
+        'productible_name',
+    ];
+
     /**
      * Get the order that owns the product.
      */
@@ -44,5 +48,14 @@ class OrderProduct extends Model
     protected static function newFactory(): OrderProductFactory
     {
         return OrderProductFactory::new();
+    }
+
+    public function getProductibleNameAttribute(): string
+    {
+        if ($this->productible()->first()?->name) {
+            return $this->productible()->first()?->name;
+        }
+
+        return 'No name';
     }
 }
