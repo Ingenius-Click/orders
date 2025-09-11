@@ -21,7 +21,7 @@ class CancelledOrderStatus implements OrderStatusInterface
      */
     public function getName(): string
     {
-        return 'Cancelled';
+        return __('Cancelled');
     }
 
     /**

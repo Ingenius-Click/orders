@@ -27,6 +27,8 @@ use Ingenius\Orders\Features\ViewOrderFeature;
 use Ingenius\Orders\Interfaces\InvoiceCreationInterface;
 use Ingenius\Orders\Services\InvoiceCreationManager;
 use Ingenius\Orders\Strategies\DefaultInvoiceCreationStrategy;
+use Ingenius\Orders\InvoiceData\OrderInvoiceDataProvider;
+use Ingenius\Orders\Services\InvoicePdfService;
 
 class OrdersServiceProvider extends ServiceProvider
 {
@@ -85,6 +87,16 @@ class OrdersServiceProvider extends ServiceProvider
             return new InvoiceDataManager();
         });
 
+        // Register the order invoice data provider
+        $this->app->afterResolving(InvoiceDataManager::class, function (InvoiceDataManager $manager) {
+            $manager->register(new OrderInvoiceDataProvider());
+        });
+
+        // Register the invoice PDF service as a singleton
+        $this->app->singleton(InvoicePdfService::class, function ($app) {
+            return new InvoicePdfService();
+        });
+
         // Register settings classes with the core settings system
         $this->registerSettingsClasses();
 
@@ -105,6 +117,8 @@ class OrdersServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register translations
+        $this->registerTranslations();
         // Register migrations with the registry
         $this->registerMigrations(__DIR__ . '/../../database/migrations', 'orders');
 
@@ -164,5 +178,14 @@ class OrdersServiceProvider extends ServiceProvider
 
         // Update the core settings config
         Config::set('settings.settings_classes', $mergedSettingsClasses);
+    }
+
+    /**
+     * Register translations.
+     */
+    protected function registerTranslations(): void
+    {
+        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'orders');
+        $this->loadJsonTranslationsFrom(__DIR__ . '/../../resources/lang');
     }
 }

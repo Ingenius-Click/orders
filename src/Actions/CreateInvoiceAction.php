@@ -46,6 +46,7 @@ class CreateInvoiceAction
             'status' => InvoiceStatus::PAID->value,
             'items' => $orderable->getItems(),
             'payment_date' => $paymentDate,
+            'is_manual' => $orderable->is_manual ?? false,
         ]);
 
         if ($emit) {

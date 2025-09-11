@@ -4,6 +4,7 @@ namespace Ingenius\Orders\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Ingenius\Coins\Services\CurrencyServices;
 use Ingenius\Orders\Enums\InvoiceStatus;
 use Ingenius\Orders\Services\InvoiceDataManager;
 
@@ -24,12 +25,20 @@ class Invoice extends Model
         'status',
         'payment_method',
         'items',
-        'payment_date'
+        'payment_date',
+        'is_manual'
     ];
 
     protected $casts = [
         'items' => 'array',
         'status' => InvoiceStatus::class,
+    ];
+
+    protected $appends = [
+        'total_amount_base_formatted',
+        'total_amount_current_cents',
+        'total_amount_current_formatted',
+        'orderable_number'
     ];
 
     public function orderable(): MorphTo
@@ -57,5 +66,36 @@ class Invoice extends Model
         $array['extra_data'] = $invoiceData;
 
         return $array;
+    }
+
+    /**
+     * Get the total amount formatted in base currency.
+     */
+    public function getTotalAmountBaseFormattedAttribute(): string
+    {
+        return CurrencyServices::formatCurrency($this->total_amount, $this->base_currency);
+    }
+
+    /**
+     * Get the total amount in cents for current currency.
+     */
+    public function getTotalAmountCurrentCentsAttribute(): int
+    {
+        return (int) ($this->total_amount * $this->exchange_rate);
+    }
+
+    /**
+     * Get the total amount formatted in current currency.
+     */
+    public function getTotalAmountCurrentFormattedAttribute(): string
+    {
+        return CurrencyServices::formatCurrency($this->total_amount_current_cents, $this->currency);
+    }
+
+    public function getOrderableNumberAttribute(): string
+    {
+        $order_number = $this->orderable()->first()?->order_number;
+
+        return $order_number ?? '-';
     }
 }

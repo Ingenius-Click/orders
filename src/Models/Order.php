@@ -39,6 +39,7 @@ class Order extends Model implements IOrderable, IWithPayment
         'session_id',
         'userable_id',
         'userable_type',
+        'is_manual'
     ];
 
     protected $appends = [

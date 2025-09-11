@@ -33,9 +33,11 @@ class CreateOrderAction
         $this->extensionManager = $extensionManager;
     }
 
-    public function handle(CreateOrderRequest $request, bool $emitEvents = true): array
+    public function handle(CreateOrderRequest $request, bool $isManual = false, bool $emitEvents = true): array
     {
         $validated = $request->validated();
+
+        $validated['is_manual'] = $isManual;
 
         $productibleModel = Config::get('orders.productible_models.product');
         if (!class_exists($productibleModel)) {
@@ -112,6 +114,7 @@ class CreateOrderAction
             'exchange_rate' => CurrencyServices::getExchangeRate($currency),
             'status' => OrderStatusEnum::NEW->value,
             'metadata' => $validated['metadata'] ?? null,
+            'is_manual' => $validated['is_manual'] ?? false,
         ]);
     }
 

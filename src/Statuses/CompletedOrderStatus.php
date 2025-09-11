@@ -22,7 +22,7 @@ class CompletedOrderStatus implements OrderStatusInterface
      */
     public function getName(): string
     {
-        return 'Completed';
+        return __('Completed');
     }
 
     /**

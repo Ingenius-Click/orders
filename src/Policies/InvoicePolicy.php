@@ -18,4 +18,26 @@ class InvoicePolicy
 
         return false;
     }
+
+    public function viewAny($user): bool
+    {
+        $userClass = tenant_user_class();
+
+        if ($user && is_object($user) && is_a($user, $userClass)) {
+            return $user->can(InvoicePermissions::INVOICE_VIEW_ANY);
+        }
+
+        return false;
+    }
+
+    public function createManual($user): bool
+    {
+        $userClass = tenant_user_class();
+
+        if ($user && is_object($user) && is_a($user, $userClass)) {
+            return $user->can(InvoicePermissions::INVOICE_CREATE_MANUAL);
+        }
+
+        return false;
+    }
 }

@@ -21,7 +21,7 @@ class NewOrderStatus implements OrderStatusInterface
      */
     public function getName(): string
     {
-        return 'New';
+        return __('New');
     }
 
     /**

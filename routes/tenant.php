@@ -13,6 +13,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Ingenius\Orders\Http\Controllers\InvoicesController;
+use Ingenius\Orders\Http\Controllers\ManualInvoiceController;
 use Ingenius\Orders\Http\Controllers\OrdersController;
 use Ingenius\Orders\Http\Controllers\OrderStatusesController;
 
@@ -41,7 +42,14 @@ Route::middleware([
     });
 
     Route::prefix('invoices')->middleware('tenant.user')->group(function () {
+        Route::get('/', [InvoicesController::class, 'index'])->middleware('tenant.has.feature:list-invoices');
+        Route::post('/manual', [ManualInvoiceController::class, 'store'])
+            ->middleware('tenant.has.feature:manual-invoice')
+        ;
         Route::get('/{invoice}', [InvoicesController::class, 'show'])->middleware('tenant.has.feature:view-invoice');
+        Route::get('/{invoice}/download-pdf', [InvoicesController::class, 'downloadPdf'])->middleware('tenant.has.feature:export-invoice');
+        Route::get('/{invoice}/preview-pdf', [InvoicesController::class, 'previewPdf'])->middleware('tenant.has.feature:export-invoice');
+        Route::get('/{invoice}/debug-html', [InvoicesController::class, 'debugHtml'])->middleware('tenant.has.feature:view-invoice');
     });
 });
 

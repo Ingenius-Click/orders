@@ -56,6 +56,8 @@ class PermissionServiceProvider extends ServiceProvider
 
         $permissionsManager->registerMany([
             InvoicePermissions::INVOICE_VIEW => 'View invoice',
+            InvoicePermissions::INVOICE_VIEW_ANY => 'View any invoice',
+            InvoicePermissions::INVOICE_CREATE_MANUAL => 'Create manual invoice',
         ], $this->moduleName, 'tenant');
     }
 }
