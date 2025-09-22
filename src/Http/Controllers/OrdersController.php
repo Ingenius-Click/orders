@@ -4,6 +4,7 @@ namespace Ingenius\Orders\Http\Controllers;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Http\Request;
 use Ingenius\Auth\Helpers\AuthHelper;
 use Ingenius\Core\Http\Controllers\Controller;
@@ -32,7 +33,7 @@ class OrdersController extends Controller
 
         $orders = $action->handle($request);
 
-        return response()->api(data: $orders, message: 'Orders fetched successfully');
+        return Response::api(data: $orders, message: 'Orders fetched successfully');
     }
 
     /**
@@ -54,7 +55,7 @@ class OrdersController extends Controller
             ], 500);
         }
 
-        return response()->api(data: $order, message: 'Order created successfully');
+        return Response::api(data: $order, message: 'Order created successfully');
     }
 
     /**
@@ -68,7 +69,7 @@ class OrdersController extends Controller
 
         $order = $action->handle($request, $id);
 
-        return response()->api(data: $order, message: 'Order fetched successfully');
+        return Response::api(data: $order, message: 'Order fetched successfully');
     }
 
     /**
@@ -82,7 +83,7 @@ class OrdersController extends Controller
 
         $result = $action->handle($id);
 
-        return response()->api(data: $result, message: $result ? 'Order deleted successfully' : 'Order not found', code: $result ? 200 : 404);
+        return Response::api(data: $result, message: $result ? 'Order deleted successfully' : 'Order not found', code: $result ? 200 : 404);
     }
 
     public function changeStatus(ChangeOrderStatusRequest $request, int $id, ChangeOrderStatusAction $action): JsonResponse
@@ -96,11 +97,11 @@ class OrdersController extends Controller
         try {
             $order = $action->handle($id, $validated['status']);
         } catch (InvalidStatusTransitionException $e) {
-            return response()->api(message: $e->getMessage(), code: 400);
+            return Response::api(message: $e->getMessage(), code: 400);
         } catch (\Exception $e) {
-            return response()->api(message: $e->getMessage(), code: 500);
+            return Response::api(message: $e->getMessage(), code: 500);
         }
 
-        return response()->api(data: $order, message: 'Order status changed successfully');
+        return Response::api(data: $order, message: 'Order status changed successfully');
     }
 }

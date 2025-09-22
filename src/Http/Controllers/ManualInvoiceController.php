@@ -5,6 +5,7 @@ namespace Ingenius\Orders\Http\Controllers;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Response;
 use Ingenius\Core\Helpers\AuthHelper;
 use Ingenius\Core\Http\Controllers\Controller;
 use Ingenius\Orders\Actions\CreateManualInvoiceAction;
@@ -27,6 +28,6 @@ class ManualInvoiceController extends Controller
 
         $invoice = $createManualInvoiceAction->handle($request);
 
-        return response()->api(data: $invoice, message: 'Invoice created successfully');
+        return Response::api(data: $invoice, message: 'Invoice created successfully');
     }
 }

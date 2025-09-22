@@ -6,6 +6,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Response as ResponseFacade;
 use Ingenius\Core\Helpers\AuthHelper;
 use Ingenius\Core\Http\Controllers\Controller;
 use Ingenius\Orders\Actions\ListInvoicesAction;
@@ -22,7 +23,7 @@ class InvoicesController extends Controller
 
         $this->authorizeForUser($user, 'view', $invoice);
 
-        return response()->api(data: $invoice, message: 'Invoice retrieved successfully');
+        return ResponseFacade::api(data: $invoice, message: 'Invoice retrieved successfully');
     }
 
     public function index(Request $request, ListInvoicesAction $listInvoicesAction): JsonResponse
@@ -33,7 +34,7 @@ class InvoicesController extends Controller
 
         $invoices = $listInvoicesAction($request->all());
 
-        return response()->api(data: $invoices, message: 'Invoices retrieved successfully');
+        return ResponseFacade::api(data: $invoices, message: 'Invoices retrieved successfully');
     }
 
     /**
