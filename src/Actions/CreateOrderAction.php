@@ -115,6 +115,7 @@ class CreateOrderAction
             'status' => OrderStatusEnum::NEW->value,
             'metadata' => $validated['metadata'] ?? null,
             'is_manual' => $validated['is_manual'] ?? false,
+            'session_id' => session()->getId()
         ]);
     }
 
