@@ -4,6 +4,7 @@ namespace Ingenius\Orders\Http\Controllers;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Http\Request;
 use Ingenius\Auth\Helpers\AuthHelper;
@@ -65,7 +66,19 @@ class OrdersController extends Controller
     {
         $user = AuthHelper::getUser();
 
-        $this->authorizeForUser($user, 'view', Order::find($id));
+        $order = Order::find($id);
+
+        if (!$order) {
+            return Response::api(message: 'Order not found', code: 404);
+        }
+
+        if(!$user) {
+            if($order->session_id !== session()->getId()) {
+                abort(403, 'This action is unauthorized.');
+            }
+        } else {
+            $this->authorizeForUser($user, 'view',$order);
+        }
 
         $order = $action->handle($request, $id);
 
