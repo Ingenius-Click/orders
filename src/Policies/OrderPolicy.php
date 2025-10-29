@@ -17,7 +17,6 @@ class OrderPolicy
 
         return false;
     }
-
     public function view($user, Order $order): bool
     {
         if (!$user) {

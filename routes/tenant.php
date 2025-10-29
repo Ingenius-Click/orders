@@ -25,6 +25,7 @@ Route::middleware([
     Route::prefix('orders')->group(function () {
 
         Route::group(['middleware' => 'tenant.user'], function () {
+            Route::get('/my-orders', [OrdersController::class, 'myOrders']);
             Route::get('/', [OrdersController::class, 'index'])->middleware('tenant.has.feature:list-orders');
             Route::delete('/{id}', [OrdersController::class, 'destroy'])->middleware('tenant.has.feature:update-order');
             Route::put('/{id}/change-status', [OrdersController::class, 'changeStatus'])->middleware('tenant.has.feature:update-order');

@@ -13,6 +13,7 @@ use Ingenius\Orders\Actions\ChangeOrderStatusAction;
 use Ingenius\Orders\Actions\CreateOrderAction;
 use Ingenius\Orders\Actions\DeleteOrderAction;
 use Ingenius\Orders\Actions\GetOrderAction;
+use Ingenius\Orders\Actions\MyOrdersAction;
 use Ingenius\Orders\Exceptions\InvalidStatusTransitionException;
 use Ingenius\Orders\Exceptions\NoProductsFoundException;
 use Ingenius\Orders\Http\Requests\ChangeOrderStatusRequest;
@@ -35,6 +36,19 @@ class OrdersController extends Controller
         $orders = $action->handle($request);
 
         return Response::api(data: $orders, message: 'Orders fetched successfully');
+    }
+
+    public function myOrders(Request $request, MyOrdersAction $action): JsonResponse
+    {
+        $user = AuthHelper::getUser();
+
+        if (!$user) {
+            abort(403, 'This action is unauthorized.');
+        }
+
+        $orders = $action->handle($request->all(), $user->id);
+
+        return Response::api(data: $orders, message: 'My Orders fetched successfully');
     }
 
     /**
