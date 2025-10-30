@@ -107,7 +107,7 @@ class CreateOrderAction
             'customer_phone' => $validated['customer_phone'] ?? null,
             'customer_address' => $validated['customer_address'] ?? null,
             'userable_type' => $user ? get_class($user) : null,
-            'userable_id' => $user ? $user->id : null,
+            'userable_id' => $user?->id,
             'items_subtotal' => 0, // Will be calculated based on products
             'current_base_currency' => $baseCurrency,
             'currency' => $currency,
