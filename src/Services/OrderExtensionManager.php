@@ -57,17 +57,22 @@ class OrderExtensionManager
     /**
      * Process order through all extensions
      *
+     * Extensions can modify the context to contribute to the final total.
+     * The context['total'] starts as items_subtotal and extensions add/subtract from it.
+     *
      * @param Order $order
      * @param array $validatedData
-     * @return array Results from all extensions
+     * @param array $initialContext Optional initial context data (e.g., pre-calculated discounts)
+     * @return array Contains 'results' from extensions and 'context' with final totals
      */
-    public function processOrder(Order $order, array $validatedData): array
+    public function processOrder(Order $order, array $validatedData, array $initialContext = []): array
     {
         $results = [];
-        $context = [
+        $context = array_merge([
             'subtotal' => $order->getItemsSubtotal(),
+            'total' => $order->getItemsSubtotal(), // Start with items_subtotal, extensions modify this
             'metadata' => []
-        ];
+        ], $initialContext);
 
         foreach ($this->extensions as $extension) {
             $extensionResult = $extension->processOrder($order, $validatedData, $context);
@@ -77,7 +82,10 @@ class OrderExtensionManager
             }
         }
 
-        return $results;
+        return [
+            'results' => $results,
+            'context' => $context,
+        ];
     }
 
     /**

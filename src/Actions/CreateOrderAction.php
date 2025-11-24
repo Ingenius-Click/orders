@@ -62,8 +62,20 @@ class CreateOrderAction
             $order->update(['items_subtotal' => $itemsSubtotal]);
             $order->save();
 
+            // Build initial context with pre-calculated discounts from cart
+            $initialContext = [
+                'discounts' => $productsData['discounts'] ?? [
+                    'product_discounts' => [],
+                    'cart_discounts' => [],
+                ],
+            ];
+
             // Process the order through all extensions and collect results
-            $extensionResults = $this->extensionManager->processOrder($order, $validated);
+            $extensionResults = $this->extensionManager->processOrder($order, $validated, $initialContext);
+
+            // Save the final total_amount calculated by extensions
+            $finalTotal = $extensionResults['context']['total'] ?? $itemsSubtotal;
+            $order->update(['total_amount' => $finalTotal]);
 
             if ($emitEvents) {
                 event(new OrderCreatedEvent($order));
@@ -132,15 +144,23 @@ class CreateOrderAction
         if ($useShopCart) {
             $shopCartModel = Config::get('orders.shop_cart_model');
             $shopCart = app($shopCartModel);
+
+            // Collect discount information if the cart supports it
+            $discounts = method_exists($shopCart, 'getDiscountsForOrder')
+                ? $shopCart->getDiscountsForOrder()
+                : ['product_discounts' => [], 'cart_discounts' => []];
+
             return [
                 'products' => $shopCart->getCartItems()->toArray(),
-                'shopCart' => $shopCart
+                'shopCart' => $shopCart,
+                'discounts' => $discounts,
             ];
         }
 
         return [
             'products' => $validated['products'],
-            'shopCart' => null
+            'shopCart' => null,
+            'discounts' => ['product_discounts' => [], 'cart_discounts' => []],
         ];
     }
 

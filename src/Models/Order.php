@@ -36,6 +36,7 @@ class Order extends Model implements IOrderable, IWithPayment
         'status',
         'metadata',
         'items_subtotal',
+        'total_amount',
         'session_id',
         'userable_id',
         'userable_type',

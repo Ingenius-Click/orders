@@ -3,7 +3,6 @@
 namespace Ingenius\Orders\Traits;
 
 use Ingenius\Coins\Services\CurrencyServices;
-use Ingenius\Orders\Services\OrderExtensionManager;
 
 trait OrderAmountTrait
 {
@@ -25,14 +24,11 @@ trait OrderAmountTrait
 
     /**
      * Get the base total amount in cents attribute.
+     * Uses persisted total_amount field calculated during order creation.
      */
     public function getBaseTotalAmountInCentsAttribute(): int
     {
-        $itemsSubtotal = $this->items_subtotal;
-
-        $extensionManager = app(OrderExtensionManager::class);
-
-        return $extensionManager->calculateFinalSubtotal($this, $itemsSubtotal);
+        return $this->total_amount ?? $this->items_subtotal;
     }
 
     /**
