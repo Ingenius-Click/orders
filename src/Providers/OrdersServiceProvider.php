@@ -3,6 +3,7 @@
 namespace Ingenius\Orders\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Ingenius\Core\Services\PackageHookManager;
 use Ingenius\Core\Traits\RegistersConfigurations;
 use Ingenius\Core\Traits\RegistersMigrations;
 use Ingenius\Orders\Features\ListInvoicesFeature;
@@ -109,6 +110,13 @@ class OrdersServiceProvider extends ServiceProvider
             $manager->register(new ViewOrderFeature());
             $manager->register(new CreateOrderFeature());
             $manager->register(new UpdateOrderFeature());
+        });
+
+        $this->app->afterResolving(PackageHookManager::class, function (PackageHookManager $manager) {
+            $manager->register('products.query.best_selling', function ($data, $context) {
+                $bestSellingQuery = $this->app->make(\Ingenius\Orders\QueriesDrawer\BestSellingProductsQuery::class);
+                return $bestSellingQuery->handle($data);
+            }, 10);
         });
     }
 
