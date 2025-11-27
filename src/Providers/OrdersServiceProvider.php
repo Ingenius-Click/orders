@@ -30,6 +30,7 @@ use Ingenius\Orders\Services\InvoiceCreationManager;
 use Ingenius\Orders\Strategies\DefaultInvoiceCreationStrategy;
 use Ingenius\Orders\InvoiceData\OrderInvoiceDataProvider;
 use Ingenius\Orders\Services\InvoicePdfService;
+use Ingenius\Orders\Extensions\CurrencyOrderExtension;
 
 class OrdersServiceProvider extends ServiceProvider
 {
@@ -68,6 +69,11 @@ class OrdersServiceProvider extends ServiceProvider
         // Register the order extension manager as a singleton
         $this->app->singleton(OrderExtensionManager::class, function ($app) {
             return new OrderExtensionManager();
+        });
+
+        // Register the currency extension
+        $this->app->afterResolving(OrderExtensionManager::class, function (OrderExtensionManager $manager) {
+            $manager->register(new CurrencyOrderExtension());
         });
 
         // Register the invoice creation manager as a singleton

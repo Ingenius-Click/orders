@@ -44,9 +44,9 @@ class CreateOrderAction
             throw new \Exception('Productible model not found');
         }
 
+        // Get currency for this order - uses helper function that checks middleware, session, then base
+        $currency = $validated['currency'] ?? get_current_currency();
         $baseCurrency = CurrencyServices::getBaseCurrencyShortName();
-        $currentCurrency = CurrencyServices::getCurrencyShortNameFromSession();
-        $currency = isset($validated['currency']) ? $validated['currency'] : ($currentCurrency ?? $baseCurrency);
 
         DB::beginTransaction();
 

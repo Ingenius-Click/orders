@@ -27,6 +27,8 @@ class OrderProduct extends Model
 
     protected $appends = [
         'productible_name',
+        'price_per_unit_in_cents',
+        'total_in_cents',
     ];
 
     /**
@@ -57,5 +59,21 @@ class OrderProduct extends Model
         }
 
         return 'No name';
+    }
+
+    /**
+     * Get the price per unit converted to order currency.
+     */
+    public function getPricePerUnitInCentsAttribute(): int
+    {
+        return $this->base_price_per_unit_in_cents * $this->order()->first()->exchange_rate;
+    }
+
+    /**
+     * Get the total price converted to order currency.
+     */
+    public function getTotalInCentsAttribute(): int
+    {
+        return $this->base_total_in_cents * $this->order()->first()->exchange_rate;
     }
 }

@@ -54,4 +54,12 @@ trait OrderAmountTrait
     {
         return CurrencyServices::formatCurrency($this->total_amount_in_cents, $this->currency);
     }
+
+    /**
+     * Get the items subtotal converted to order currency.
+     */
+    public function getItemsSubtotalConvertedAttribute(): int
+    {
+        return $this->items_subtotal * $this->exchange_rate;
+    }
 }
