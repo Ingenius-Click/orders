@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Ingenius\Orders\Database\Factories\OrderProductFactory;
+use Ingenius\Coins\Services\CurrencyServices;
 
 class OrderProduct extends Model
 {
@@ -29,6 +30,8 @@ class OrderProduct extends Model
         'productible_name',
         'price_per_unit_in_cents',
         'total_in_cents',
+        'price_per_unit_formatted',
+        'total_formatted',
     ];
 
     /**
@@ -75,5 +78,21 @@ class OrderProduct extends Model
     public function getTotalInCentsAttribute(): int
     {
         return $this->base_total_in_cents * $this->order()->first()->exchange_rate;
+    }
+
+    /**
+     * Get the formatted price per unit in order currency.
+     */
+    public function getPricePerUnitFormattedAttribute(): string
+    {
+        return CurrencyServices::formatCurrency($this->price_per_unit_in_cents, $this->order()->first()->currency);
+    }
+
+    /**
+     * Get the formatted total price in order currency.
+     */
+    public function getTotalFormattedAttribute(): string
+    {
+        return CurrencyServices::formatCurrency($this->total_in_cents, $this->order()->first()->currency);
     }
 }

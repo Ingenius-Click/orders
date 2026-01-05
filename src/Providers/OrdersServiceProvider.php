@@ -3,6 +3,7 @@
 namespace Ingenius\Orders\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Ingenius\Core\Services\EventRegistryService;
 use Ingenius\Core\Services\PackageHookManager;
 use Ingenius\Core\Traits\RegistersConfigurations;
 use Ingenius\Core\Traits\RegistersMigrations;
@@ -123,6 +124,32 @@ class OrdersServiceProvider extends ServiceProvider
                 $bestSellingQuery = $this->app->make(\Ingenius\Orders\QueriesDrawer\BestSellingProductsQuery::class);
                 return $bestSellingQuery->handle($data);
             }, 10);
+        });
+
+        $this->app->afterResolving(EventRegistryService::class, function (EventRegistryService $registry) {
+            $registry->register(
+                eventClass: \Ingenius\Orders\Events\OrderCreatedEvent::class,
+                key: 'order.created',
+                label: __('Order Created'),
+                viewName: 'order-created',
+                recipientResolver: \Ingenius\Orders\Notifications\Resolvers\OrderRecipientResolver::class,
+                notifiable: true,
+                description: __('Fired when a new order is created'),
+                package: 'orders',
+                defaultChannels: ['email']
+            );
+
+            $registry->register(
+                eventClass: \Ingenius\Orders\Events\InvoiceCreatedEvent::class,
+                key: 'order.paid',
+                label: __('Order Paid'),
+                viewName: 'order-paid',
+                recipientResolver: \Ingenius\Orders\Notifications\Resolvers\InvoiceRecipientResolver::class,
+                notifiable: true,
+                description: __('Fired when an order payment is confirmed and invoice is created'),
+                package: 'orders',
+                defaultChannels: ['email']
+            );
         });
     }
 

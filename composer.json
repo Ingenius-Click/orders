@@ -3,7 +3,7 @@
     "description": "Ingenius Orders Package",
     "type": "library",
     "license": "MIT",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "authors": [
         {
             "name": "Ingenius Team",
@@ -13,7 +13,8 @@
     "require": {
         "php": "^8.2",
         "ingenius/core": "*",
-        "ingenius/auth": "*"
+        "ingenius/auth": "*",
+        "ingenius/coins": "*"
     },
     "require-dev": {
         "orchestra/testbench": "^9.0",

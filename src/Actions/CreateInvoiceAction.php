@@ -7,6 +7,7 @@ use Ingenius\Core\Services\SequenceGeneratorService;
 use Ingenius\Orders\Enums\InvoiceStatus;
 use Ingenius\Orders\Events\InvoiceCreatedEvent;
 use Ingenius\Orders\Models\Invoice;
+use Ingenius\Orders\Models\Order;
 
 class CreateInvoiceAction
 {
@@ -29,6 +30,11 @@ class CreateInvoiceAction
     {
         if (!isset($orderable->id)) {
             throw new \Exception('Orderable ID is required');
+        }
+
+        // Eager load productibles to prevent N+1 queries when getting items
+        if ($orderable instanceof Order) {
+            $orderable->load('products.productible');
         }
 
         $invoice = Invoice::create([

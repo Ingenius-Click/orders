@@ -105,6 +105,7 @@ class Order extends Model implements IOrderable, IWithPayment
             return [
                 'productible_id' => $product->productible_id,
                 'productible_type' => $product->productible_type,
+                'productible_name' => $product->productible?->name ?? 'N/A',
                 'quantity' => $product->quantity,
                 'base_price_per_unit_in_cents' => $product->base_price_per_unit_in_cents,
                 'base_total_in_cents' => $product->base_total_in_cents,
