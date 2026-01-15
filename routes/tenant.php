@@ -24,6 +24,7 @@ Route::middleware([
 
     Route::prefix('orders')->group(function () {
 
+
         Route::group(['middleware' => 'tenant.user'], function () {
             Route::get('/my-orders', [OrdersController::class, 'myOrders']);
             Route::get('/', [OrdersController::class, 'index'])->middleware('tenant.has.feature:list-orders');
