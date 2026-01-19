@@ -62,6 +62,7 @@ class InvoiceRecipientResolver implements RecipientResolverInterface
                 'total' => $invoice->total_amount_current_formatted,
                 'currency' => $invoice->currency ?? config('app.currency', 'USD'),
                 'status' => $invoice->status,
+                'status_name' => __($invoice->status),
             ],
             'order' => $order ? (object) [
                 'order_number' => $order->order_number,
