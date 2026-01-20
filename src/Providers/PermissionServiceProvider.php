@@ -48,8 +48,8 @@ class PermissionServiceProvider extends ServiceProvider
             'Create order status transitions',
             $this->moduleName,
             'tenant',
-            'Create order status transitions',
-            'Order Status'
+            __('orders::permissions.display_names.create_order_status_transitions'),
+            __('orders::permissions.groups.order_status')
         );
 
         $permissionsManager->register(
@@ -57,8 +57,8 @@ class PermissionServiceProvider extends ServiceProvider
             'Delete order status transitions',
             $this->moduleName,
             'tenant',
-            'Delete order status transitions',
-            'Order Status'
+            __('orders::permissions.display_names.delete_order_status_transitions'),
+            __('orders::permissions.groups.order_status')
         );
 
         // Order permissions
@@ -67,8 +67,8 @@ class PermissionServiceProvider extends ServiceProvider
             'View any order',
             $this->moduleName,
             'tenant',
-            'View any order',
-            'Orders'
+            __('orders::permissions.display_names.view_any_order'),
+            __('orders::permissions.groups.orders')
         );
 
         $permissionsManager->register(
@@ -76,8 +76,8 @@ class PermissionServiceProvider extends ServiceProvider
             'Delete order',
             $this->moduleName,
             'tenant',
-            'Delete order',
-            'Orders'
+            __('orders::permissions.display_names.delete_order'),
+            __('orders::permissions.groups.orders')
         );
 
         $permissionsManager->register(
@@ -85,8 +85,8 @@ class PermissionServiceProvider extends ServiceProvider
             'Change order status',
             $this->moduleName,
             'tenant',
-            'Change order status',
-            'Orders'
+            __('orders::permissions.display_names.change_order_status'),
+            __('orders::permissions.groups.orders')
         );
 
         // Invoice permissions
@@ -95,8 +95,8 @@ class PermissionServiceProvider extends ServiceProvider
             'View invoice',
             $this->moduleName,
             'tenant',
-            'View invoice',
-            'Invoices'
+            __('orders::permissions.display_names.view_invoice'),
+            __('orders::permissions.groups.invoices')
         );
 
         $permissionsManager->register(
@@ -104,8 +104,8 @@ class PermissionServiceProvider extends ServiceProvider
             'View any invoice',
             $this->moduleName,
             'tenant',
-            'View any invoice',
-            'Invoices'
+            __('orders::permissions.display_names.view_any_invoice'),
+            __('orders::permissions.groups.invoices')
         );
 
         $permissionsManager->register(
@@ -113,8 +113,8 @@ class PermissionServiceProvider extends ServiceProvider
             'Create manual invoice',
             $this->moduleName,
             'tenant',
-            'Create manual invoice',
-            'Invoices'
+            __('orders::permissions.display_names.create_manual_invoice'),
+            __('orders::permissions.groups.invoices')
         );
     }
 }

@@ -49,6 +49,10 @@ class OrdersServiceProvider extends ServiceProvider
         $this->registerConfig(__DIR__ . '/../../config/orders.php', 'orders', 'orders');
         $this->registerConfig(__DIR__ . '/../../config/permissions.php', 'orders.permissions', 'orders');
 
+        // Load translations early so they're available for permission registration
+        $this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'orders');
+        $this->loadJsonTranslationsFrom(__DIR__ . '/../../resources/lang');
+
         // Register the route service provider
         $this->app->register(RouteServiceProvider::class);
 
@@ -158,8 +162,6 @@ class OrdersServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register translations
-        $this->registerTranslations();
         // Register migrations with the registry
         $this->registerMigrations(__DIR__ . '/../../database/migrations', 'orders');
 
