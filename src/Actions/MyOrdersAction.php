@@ -10,7 +10,7 @@ class MyOrdersAction {
 
         $user_class = tenant_user_class();
 
-        $query = Order::query()->where('userable_id', $userId)->where('userable_type', $user_class);
+        $query = Order::with('products')->where('userable_id', $userId)->where('userable_type', $user_class);
 
         return table_handler_paginate($filters, $query);
     }
