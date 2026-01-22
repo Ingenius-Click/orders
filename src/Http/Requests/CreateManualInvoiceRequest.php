@@ -2,9 +2,7 @@
 
 namespace Ingenius\Orders\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Config;
-use Ingenius\Orders\Services\OrderExtensionManager;
+use Ingenius\Orders\Services\OrderStatusManager;
 
 class CreateManualInvoiceRequest extends CreateOrderRequest
 {
@@ -12,11 +10,20 @@ class CreateManualInvoiceRequest extends CreateOrderRequest
     {
         $rules = parent::rules();
 
-        $rules = [
+        $orderStatusManager = app(OrderStatusManager::class);
+        $validStatuses = implode(',', array_keys($orderStatusManager->getStatuses()));
+
+        $manualInvoiceRules = [
             'payment_date' => 'required|date',
-            ...$rules,
+            // Price overrides for manual invoices (keyed by productible_id, values in cents)
+            'product_price_overrides' => 'nullable|array',
+            'product_price_overrides.*' => 'integer|min:0',
+            // Fixed shipping price override in cents (bypasses shipping method calculation)
+            'shipping_price_override' => 'nullable|integer|min:0',
+            // Order status to set after invoice creation (defaults to 'completed')
+            'order_status' => 'nullable|string|in:' . $validStatuses,
         ];
 
-        return $rules;
+        return array_merge($manualInvoiceRules, $rules);
     }
 }

@@ -57,17 +57,21 @@ class CreateOrderAction
             $products = $productsData['products'];
             $shopCart = $productsData['shopCart'];
 
-            $itemsSubtotal = $this->processProducts($order, $products, $productibleModel);
+            $productPriceOverrides = $isManual ? ($validated['product_price_overrides'] ?? []) : [];
+            $itemsSubtotal = $this->processProducts($order, $products, $productibleModel, $productPriceOverrides);
 
             $order->update(['items_subtotal' => $itemsSubtotal]);
             $order->save();
 
             // Build initial context with pre-calculated discounts from cart
+            // Note: is_manual_invoice is set internally (not from request) for security
             $initialContext = [
                 'discounts' => $productsData['discounts'] ?? [
                     'product_discounts' => [],
                     'cart_discounts' => [],
                 ],
+                'is_manual_invoice' => $isManual,
+                'shipping_price_override' => $isManual ? ($validated['shipping_price_override'] ?? null) : null,
             ];
 
             // Process the order through all extensions and collect results
@@ -170,10 +174,11 @@ class CreateOrderAction
      * @param Order $order The order to add products to
      * @param array $products Products to process
      * @param string $productibleModel Product model class
+     * @param array $priceOverrides Optional price overrides keyed by productible_id (for manual invoices)
      * @return int Total price of all products
      * @throws \Exception If product is not found or not purchasable
      */
-    private function processProducts(Order $order, array $products, string $productibleModel): int
+    private function processProducts(Order $order, array $products, string $productibleModel, array $priceOverrides = []): int
     {
         if (empty($products)) {
             $order->delete();
@@ -195,14 +200,16 @@ class CreateOrderAction
                 throw new \Exception('Product is not purchasable');
             }
 
-            $baseTotal = $productible->getFinalPrice() * $product['quantity'];
+            // Use price override if provided (for manual invoices), otherwise use product's final price
+            $pricePerUnit = $priceOverrides[$product['productible_id']] ?? $productible->getFinalPrice();
+            $baseTotal = $pricePerUnit * $product['quantity'];
             $itemsSubtotal += $baseTotal;
 
             $order->products()->create([
                 'productible_type' => $productibleModel,
                 'productible_id' => $productible->getId(),
                 'quantity' => $product['quantity'],
-                'base_price_per_unit_in_cents' => $productible->getFinalPrice(),
+                'base_price_per_unit_in_cents' => $pricePerUnit,
                 'base_total_in_cents' => $baseTotal,
                 'metadata' => $product['metadata'] ?? null,
             ]);

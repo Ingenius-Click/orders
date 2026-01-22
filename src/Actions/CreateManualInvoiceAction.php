@@ -2,7 +2,7 @@
 
 namespace Ingenius\Orders\Actions;
 
-use Illuminate\Support\Facades\Config;
+use Ingenius\Orders\Enums\OrderStatusEnum;
 use Ingenius\Orders\Http\Requests\CreateManualInvoiceRequest;
 use Ingenius\Orders\Models\Order;
 
@@ -14,7 +14,8 @@ class CreateManualInvoiceAction
 
         try {
             $result = $createOrderAction->handle($request, true);
-            $order = $result['order'];
+            // Refresh order from database to ensure we have the final calculated total_amount
+            $order = Order::find($result['order']->id);
         } catch (\Exception $e) {
             throw $e;
         }
@@ -28,6 +29,10 @@ class CreateManualInvoiceAction
         }
 
         $invoice->update(['is_manual' => true]);
+
+        // Transition order to specified status (defaults to 'completed')
+        $targetStatus = $request->order_status ?? OrderStatusEnum::COMPLETED->value;
+        $order->transitionTo($targetStatus);
 
         return $invoice;
     }

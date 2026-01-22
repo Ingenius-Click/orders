@@ -37,6 +37,11 @@ class InvoiceCreationManager
      */
     public function attemptToCreateInvoice(IOrderable $orderable, string $paid_at, string $status): ?Invoice
     {
+        //Invoice already exists
+        if (Invoice::where('orderable_id', $orderable->id)->where('orderable_type', get_class($orderable))->exists()) {
+            return null;
+        }
+
         foreach ($this->strategies as $strategy) {
             if ($strategy->shouldCreateInvoice($orderable, $status)) {
                 return $strategy->createInvoice($orderable, $paid_at);
