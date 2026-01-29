@@ -33,5 +33,6 @@
     "Fired when a new order is created": "Se dispara cuando se crea una nueva orden",
     "Order Paid": "Orden Pagada",
     "Fired when an order payment is confirmed and invoice is created": "Se dispara cuando se confirma el pago de una orden y se crea la factura",
-    "Orders": "Órdenes"
+    "Orders": "Órdenes",
+    "Contact Form Received": "Formulario de Contacto Recibido"
 }
