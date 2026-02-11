@@ -39,16 +39,39 @@ trait OrderPaymentTrait
     /**
      * Handle expired payment.
      *
-     * This method is intentionally left empty as the business logic for handling
-     * expired payments has not been defined yet. Depending on requirements, this could:
-     * - Transition the order to a cancelled state
-     * - Send notifications to admins
-     * - Attempt to recover the order via customer notifications
-     * - Or implement other recovery strategies
+     * Automatically cancels the order when the payment expires.
      */
     public function onPaymentExpired(?string $intendedStatus = null): void
     {
-        Log::info('Payment expired for order ' . $this->id);
-        Log::info('Intended status: ' . $intendedStatus);
+        try {
+            $targetStatus = $intendedStatus ?? OrderStatusEnum::CANCELLED->value;
+
+            $this->transitionTo($targetStatus);
+
+            Log::info('Order cancelled due to payment expiration', [
+                'order_id' => $this->id,
+                'order_number' => $this->order_number,
+                'previous_status' => $this->status,
+                'new_status' => $targetStatus,
+            ]);
+        } catch (InvalidStatusTransitionException $e) {
+            Log::warning('Failed to transition order on payment expiration', [
+                'order_id' => $this->id,
+                'order_number' => $this->order_number,
+                'intended_status' => $intendedStatus,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Fallback to cancelled if transition fails
+            try {
+                $this->transitionTo(OrderStatusEnum::CANCELLED->value);
+            } catch (InvalidStatusTransitionException $fallbackException) {
+                Log::error('Failed to cancel order on payment expiration', [
+                    'order_id' => $this->id,
+                    'order_number' => $this->order_number,
+                    'error' => $fallbackException->getMessage(),
+                ]);
+            }
+        }
     }
 }
