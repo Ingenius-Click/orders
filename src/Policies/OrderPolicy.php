@@ -20,7 +20,8 @@ class OrderPolicy
     public function view($user, Order $order): bool
     {
         if (!$user) {
-            return $order->session_id === session()->getId();
+            return $order->guest_token !== null
+                && $order->guest_token === request()->header('X-Guest-Token');
         }
 
         $userClass = tenant_user_class();

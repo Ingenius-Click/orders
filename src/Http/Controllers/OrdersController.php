@@ -87,7 +87,7 @@ class OrdersController extends Controller
         }
 
         if(!$user) {
-            if($order->session_id !== session()->getId()) {
+            if(!request()->header('X-Guest-Token')) {
                 abort(403, 'This action is unauthorized.');
             }
         } else {
