@@ -4,6 +4,7 @@ namespace Ingenius\Orders\Models;
 
 use Ingenius\Core\Interfaces\IOrderable;
 use Ingenius\Core\Interfaces\IWithPayment;
+use Ingenius\Core\Services\PackageHookManager;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -137,6 +138,11 @@ class Order extends Model implements IOrderable, IWithPayment
     public function getCustomerAddress(): ?string
     {
         return $this->customer_address;
+    }
+
+    public function getShippingCost(): int
+    {
+        return (int) app(PackageHookManager::class)->execute('order.shipping_cost', 0, ['order' => $this]);
     }
 
     public function toArray(): array
