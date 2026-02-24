@@ -2,6 +2,7 @@
 
 namespace Ingenius\Orders\Statuses;
 
+use Ingenius\Core\Interfaces\StockAvailabilityInterface;
 use Ingenius\Orders\Enums\OrderStatusEnum;
 use Ingenius\Orders\Interfaces\OrderStatusInterface;
 use Ingenius\Orders\Models\Order;
@@ -46,11 +47,22 @@ class NewOrderStatus implements OrderStatusInterface
 
     /**
      * Called before transitioning from this status to another.
+     * Invalidates stock cache for all products in the order since reservations change.
      */
     public function onExit(Order $order, string $targetStatusIdentifier): void
     {
-        // Logic to execute when exiting the new status
-        // For example, record the time spent in this status
+        if (!app()->bound(StockAvailabilityInterface::class)) {
+            return;
+        }
+
+        $stockService = app(StockAvailabilityInterface::class);
+
+        foreach ($order->products as $orderProduct) {
+            $stockService->invalidateCache(
+                $orderProduct->productible_type,
+                $orderProduct->productible_id
+            );
+        }
     }
 
     /**

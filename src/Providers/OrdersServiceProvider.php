@@ -5,6 +5,7 @@ namespace Ingenius\Orders\Providers;
 use Illuminate\Support\ServiceProvider;
 use Ingenius\Core\Services\EventRegistryService;
 use Ingenius\Core\Services\PackageHookManager;
+use Ingenius\Orders\Enums\OrderStatusEnum;
 use Ingenius\Core\Traits\RegistersConfigurations;
 use Ingenius\Core\Traits\RegistersMigrations;
 use Ingenius\Orders\Features\ListInvoicesFeature;
@@ -128,6 +129,19 @@ class OrdersServiceProvider extends ServiceProvider
                 $bestSellingQuery = $this->app->make(\Ingenius\Orders\QueriesDrawer\BestSellingProductsQuery::class);
                 return $bestSellingQuery->handle($data);
             }, 10);
+
+            // Provide order reservation counts for stock availability
+            $manager->register('stock.reservations.get', function ($reservedSoFar, $context) {
+                $reserved = \Ingenius\Orders\Models\OrderProduct::query()
+                    ->where('productible_id', $context['productible_id'])
+                    ->where('productible_type', $context['productible_type'])
+                    ->whereHas('order', function ($q) {
+                        $q->where('status', OrderStatusEnum::NEW->value);
+                    })
+                    ->sum('quantity');
+
+                return $reservedSoFar + $reserved;
+            }, 20);
         });
 
         $this->app->afterResolving(EventRegistryService::class, function (EventRegistryService $registry) {

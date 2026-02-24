@@ -2,6 +2,7 @@
 
 namespace Ingenius\Orders\Actions;
 
+use Ingenius\Core\Interfaces\IInventoriable;
 use Ingenius\Core\Interfaces\IPurchasable;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,8 @@ use Ingenius\Orders\Exceptions\NoProductsFoundException;
 use Ingenius\Orders\Models\Order;
 use Ingenius\Orders\Http\Requests\CreateOrderRequest;
 use Ingenius\Orders\Services\OrderExtensionManager;
+use Ingenius\Core\Interfaces\StockAvailabilityInterface;
+use Ingenius\ShopCart\Exceptions\InsufficientStockException;
 
 class CreateOrderAction
 {
@@ -186,6 +189,10 @@ class CreateOrderAction
         }
 
         $itemsSubtotal = 0;
+        $stockService = app()->bound(StockAvailabilityInterface::class)
+            ? app(StockAvailabilityInterface::class)
+            : null;
+        $affectedProducts = [];
 
         foreach ($products as $product) {
             $productible = $productibleModel::find($product['productible_id']);
@@ -198,6 +205,20 @@ class CreateOrderAction
             if (!$productible instanceof IPurchasable) {
                 $order->delete();
                 throw new \Exception('Product is not purchasable');
+            }
+
+            // Validate stock availability before creating order product
+            if ($stockService && $productible instanceof IInventoriable && $productible->handleStock()) {
+                if (!$stockService->hasAvailableStock($productible, $product['quantity'])) {
+                    $order->delete();
+                    throw new InsufficientStockException(
+                        $productible->getId(),
+                        $product['quantity'],
+                        $stockService->getAvailableStock($productible)
+                    );
+                }
+
+                $affectedProducts[] = $productible;
             }
 
             // Use price override if provided (for manual invoices), otherwise use product's final price
@@ -213,6 +234,13 @@ class CreateOrderAction
                 'base_total_in_cents' => $baseTotal,
                 'metadata' => $product['metadata'] ?? null,
             ]);
+        }
+
+        // Invalidate stock cache for all affected products
+        if ($stockService) {
+            foreach ($affectedProducts as $productible) {
+                $stockService->invalidateCache(get_class($productible), $productible->getId());
+            }
         }
 
         return $itemsSubtotal;
