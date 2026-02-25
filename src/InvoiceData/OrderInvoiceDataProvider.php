@@ -38,8 +38,8 @@ class OrderInvoiceDataProvider implements InvoiceDataProviderInterface
         $productProperties = [];
         foreach ($orderable->products as $index => $product) {
             $productKey = __('Product') . ' ' . ($index + 1);
-            $unitPrice = CurrencyServices::formatCurrency($product->base_price_per_unit_in_cents, $orderable->getBaseCurrency());
-            $totalPrice = CurrencyServices::formatCurrency($product->base_total_in_cents, $orderable->getBaseCurrency());
+            $unitPrice = CurrencyServices::formatCurrency($product->price_per_unit_in_cents, $orderable->getCurrency());
+            $totalPrice = CurrencyServices::formatCurrency($product->total_in_cents, $orderable->getCurrency());
 
             $productProperties[$productKey] = sprintf(
                 __('%s (Qty: %d) - %s each, Total: %s'),

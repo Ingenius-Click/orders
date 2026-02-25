@@ -48,7 +48,7 @@ class CreateInvoiceAction
             'currency' => $orderable->getCurrency(),
             'base_currency' => $orderable->getBaseCurrency(),
             'exchange_rate' => $orderable->getExchangeRate(),
-            'total_amount' => $orderable->getTotalAmount(),
+            'total_amount' => $orderable->getBaseTotalAmount(),
             'status' => InvoiceStatus::PAID->value,
             'items' => $orderable->getItems(),
             'payment_date' => $paymentDate,
