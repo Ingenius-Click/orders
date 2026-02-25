@@ -60,8 +60,24 @@ class CreateOrderAction
             $products = $productsData['products'];
             $shopCart = $productsData['shopCart'];
 
+            // When the order is created from the user's own cart, exclude that user's
+            // cart items from the stock reservation check so their reservation does not
+            // block their own order creation.
+            $cartExclusionContext = [];
+            if ($shopCart !== null) {
+                $user = AuthHelper::getUser();
+                $guestToken = request()->header('X-Guest-Token');
+
+                if ($user) {
+                    $cartExclusionContext['exclude_cart_owner_id'] = $user->id;
+                    $cartExclusionContext['exclude_cart_owner_type'] = get_class($user);
+                } elseif ($guestToken) {
+                    $cartExclusionContext['exclude_cart_guest_token'] = $guestToken;
+                }
+            }
+
             $productPriceOverrides = $isManual ? ($validated['product_price_overrides'] ?? []) : [];
-            $itemsSubtotal = $this->processProducts($order, $products, $productibleModel, $productPriceOverrides);
+            $itemsSubtotal = $this->processProducts($order, $products, $productibleModel, $productPriceOverrides, $cartExclusionContext);
 
             $order->update(['items_subtotal' => $itemsSubtotal]);
             $order->save();
@@ -194,6 +210,18 @@ class CreateOrderAction
             : null;
         $affectedProducts = [];
 
+        // Exclude the current user's own cart items from the stock reservation check
+        // so their existing cart reservation does not block their own order creation.
+        $cartExclusionContext = [];
+        $user = AuthHelper::getUser();
+        $guestToken = request()->header('X-Guest-Token');
+        if ($user) {
+            $cartExclusionContext['exclude_cart_owner_id'] = $user->id;
+            $cartExclusionContext['exclude_cart_owner_type'] = get_class($user);
+        } elseif ($guestToken) {
+            $cartExclusionContext['exclude_cart_guest_token'] = $guestToken;
+        }
+
         foreach ($products as $product) {
             $productible = $productibleModel::find($product['productible_id']);
 
@@ -209,12 +237,12 @@ class CreateOrderAction
 
             // Validate stock availability before creating order product
             if ($stockService && $productible instanceof IInventoriable && $productible->handleStock()) {
-                if (!$stockService->hasAvailableStock($productible, $product['quantity'])) {
+                if (!$stockService->hasAvailableStock($productible, $product['quantity'], $cartExclusionContext)) {
                     $order->delete();
                     throw new InsufficientStockException(
                         $productible->getId(),
                         $product['quantity'],
-                        $stockService->getAvailableStock($productible)
+                        $stockService->getAvailableStock($productible, $cartExclusionContext)
                     );
                 }
 
