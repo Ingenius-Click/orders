@@ -62,4 +62,8 @@ trait OrderAmountTrait
     {
         return $this->items_subtotal * $this->exchange_rate;
     }
+
+    public function getItemsSubtotalFormattedAttribute(): string {
+        return CurrencyServices::formatCurrency($this->items_subtotal_converted, $this->currency);
+    }
 }

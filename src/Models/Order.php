@@ -50,6 +50,7 @@ class Order extends Model implements IOrderable, IWithPayment
         'total_amount_in_cents',
         'total_amount_formatted',
         'items_subtotal_converted',
+        'items_subtotal_formatted',
         'status_name',
         'allowed_next_statuses',
     ];
