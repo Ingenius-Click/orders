@@ -57,11 +57,17 @@ class OrderProduct extends Model
 
     public function getProductibleNameAttribute(): string
     {
-        if ($this->productible()->first()?->name) {
-            return $this->productible()->first()?->name;
+        $productible = $this->productible()->first();
+
+        if (!$productible) {
+            return 'No name';
         }
 
-        return 'No name';
+        if (method_exists($productible, 'getName')) {
+            return $productible->getName();
+        }
+
+        return $productible->name ?? 'No name';
     }
 
     /**

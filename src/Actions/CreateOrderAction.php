@@ -223,7 +223,11 @@ class CreateOrderAction
         }
 
         foreach ($products as $product) {
-            $productible = $productibleModel::find($product['productible_id']);
+            // Use productible_type from cart item if available, otherwise fall back to configured model
+            $resolveModel = $product['productible_type'] ?? $productibleModel;
+            $productible = class_exists($resolveModel)
+                ? $resolveModel::find($product['productible_id'])
+                : null;
 
             if (!$productible) {
                 $order->delete();
@@ -255,7 +259,7 @@ class CreateOrderAction
             $itemsSubtotal += $baseTotal;
 
             $order->products()->create([
-                'productible_type' => $productibleModel,
+                'productible_type' => get_class($productible),
                 'productible_id' => $productible->getId(),
                 'quantity' => $product['quantity'],
                 'base_price_per_unit_in_cents' => $pricePerUnit,
