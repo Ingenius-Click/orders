@@ -42,5 +42,6 @@ return [
     */
     'settings_classes' => [
         \Ingenius\Orders\Settings\InvoiceSettings::class,
+        \Ingenius\Orders\Settings\CheckoutSettings::class,
     ],
 ];

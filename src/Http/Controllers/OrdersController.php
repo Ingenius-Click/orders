@@ -19,6 +19,7 @@ use Ingenius\Orders\Exceptions\NoProductsFoundException;
 use Ingenius\Orders\Http\Requests\ChangeOrderStatusRequest;
 use Ingenius\Orders\Http\Requests\CreateOrderRequest;
 use Ingenius\Orders\Models\Order;
+use Ingenius\Orders\Settings\CheckoutSettings;
 
 class OrdersController extends Controller
 {
@@ -111,6 +112,16 @@ class OrdersController extends Controller
         $result = $action->handle($id);
 
         return Response::api(data: $result, message: $result ? 'Order deleted successfully' : 'Order not found', code: $result ? 200 : 404);
+    }
+
+    public function getCheckoutSettings(CheckoutSettings $settings): JsonResponse
+    {
+        return Response::api(
+            data: [
+                'require_registration_for_purchase' => $settings->require_registration_for_purchase,
+            ],
+            message: 'Checkout settings fetched successfully'
+        );
     }
 
     public function changeStatus(ChangeOrderStatusRequest $request, int $id, ChangeOrderStatusAction $action): JsonResponse

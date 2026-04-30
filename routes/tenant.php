@@ -32,8 +32,13 @@ Route::middleware([
             Route::put('/{id}/change-status', [OrdersController::class, 'changeStatus'])->middleware('tenant.has.feature:update-order');
         });
 
-        Route::post('/', [OrdersController::class, 'store'])->middleware('tenant.has.feature:create-order');
+        Route::post('/', [OrdersController::class, 'store'])
+            ->middleware(['tenant.has.feature:create-order', 'orders.require_registration']);
         Route::get('/{id}', [OrdersController::class, 'show'])->middleware('tenant.has.feature:view-order');
+    });
+
+    Route::prefix('checkout')->group(function () {
+        Route::get('/settings', [OrdersController::class, 'getCheckoutSettings']);
     });
 
     Route::prefix('order-statuses')->middleware('tenant.user')->group(function () {

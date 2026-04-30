@@ -113,6 +113,12 @@ class OrdersServiceProvider extends ServiceProvider
         // Register settings classes with the core settings system
         $this->registerSettingsClasses();
 
+        // Bind tenant-aware Settings instances
+        $this->registerSettingsBindings();
+
+        // Register middleware aliases
+        $this->registerMiddlewares();
+
         $this->app->afterResolving(FeatureManager::class, function (FeatureManager $manager) {
             $manager->register(new ManualInvoiceFeature());
             $manager->register(new ListInvoicesFeature());
@@ -235,6 +241,34 @@ class OrdersServiceProvider extends ServiceProvider
 
         // Update the core settings config
         Config::set('settings.settings_classes', $mergedSettingsClasses);
+    }
+
+    /**
+     * Register tenant-aware Settings bindings.
+     */
+    protected function registerSettingsBindings(): void
+    {
+        $this->app->bind(\Ingenius\Orders\Settings\CheckoutSettings::class, function ($app) {
+            $tenancy = $app->make(\Stancl\Tenancy\Tenancy::class);
+            if ($tenancy->tenant) {
+                return \Ingenius\Orders\Settings\CheckoutSettings::make();
+            }
+
+            return new \Ingenius\Orders\Settings\CheckoutSettings();
+        });
+    }
+
+    /**
+     * Register middleware aliases.
+     */
+    protected function registerMiddlewares(): void
+    {
+        $router = $this->app['router'];
+
+        $router->aliasMiddleware(
+            'orders.require_registration',
+            \Ingenius\Orders\Http\Middleware\EnsureRegisteredForPurchase::class
+        );
     }
 
     /**
