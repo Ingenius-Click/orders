@@ -106,6 +106,7 @@ class Order extends Model implements IOrderable, IWithPayment
         return $this->products->map(function (OrderProduct $product) {
             return [
                 'productible_id' => $product->productible_id,
+                'productible_sku' => $product->productible?->sku ?? '',
                 'productible_type' => $product->productible_type,
                 'productible_name' => $product->productible?->name ?? 'N/A',
                 'quantity' => $product->quantity,

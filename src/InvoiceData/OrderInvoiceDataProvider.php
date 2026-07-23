@@ -36,15 +36,16 @@ class OrderInvoiceDataProvider implements InvoiceDataProviderInterface
 
         // Create Products section
         $productProperties = [];
-        foreach ($orderable->products as $index => $product) {
+        foreach ($orderable->getItems() as $index => $product) {
             $productKey = __('Product') . ' ' . ($index + 1);
-            $unitPrice = CurrencyServices::formatCurrency($product->price_per_unit_in_cents, $orderable->getCurrency());
-            $totalPrice = CurrencyServices::formatCurrency($product->total_in_cents, $orderable->getCurrency());
+            $unitPrice = CurrencyServices::formatCurrency($product['base_price_per_unit_in_cents'], $orderable->getCurrency());
+            $totalPrice = CurrencyServices::formatCurrency($product['base_total_in_cents'], $orderable->getCurrency());
+            $sku = $product['productible_sku'] ? sprintf('SKU: %s', $product['productible_sku']) : '';
 
-            $productProperties[$productKey] = sprintf(
+            $productProperties[$sku ?? $productKey] = sprintf(
                 __('%s (Qty: %d) - %s each, Total: %s'),
-                $product->productible_name,
-                $product->quantity,
+                $product['productible_name'],
+                $product['quantity'],
                 $unitPrice,
                 $totalPrice
             );
