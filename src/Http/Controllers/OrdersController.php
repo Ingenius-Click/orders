@@ -19,6 +19,7 @@ use Ingenius\Orders\Exceptions\NoProductsFoundException;
 use Ingenius\Orders\Http\Requests\ChangeOrderStatusRequest;
 use Ingenius\Orders\Http\Requests\CreateOrderRequest;
 use Ingenius\Orders\Models\Order;
+use Ingenius\Orders\Services\OrderPdfService;
 use Ingenius\Orders\Settings\CheckoutSettings;
 
 class OrdersController extends Controller
@@ -122,6 +123,20 @@ class OrdersController extends Controller
             ],
             message: 'Checkout settings fetched successfully'
         );
+    }
+
+    /**
+     * Download order as PDF, for the courier/messenger to carry on delivery.
+     */
+    public function downloadPdf(int $id, OrderPdfService $pdfService): \Illuminate\Http\Response
+    {
+        $user = AuthHelper::getUser();
+
+        $order = Order::findOrFail($id);
+
+        $this->authorizeForUser($user, 'view', $order);
+
+        return $pdfService->generatePdf($order);
     }
 
     public function changeStatus(ChangeOrderStatusRequest $request, int $id, ChangeOrderStatusAction $action): JsonResponse

@@ -40,10 +40,11 @@ class OrderInvoiceDataProvider implements InvoiceDataProviderInterface
             $productKey = __('Product') . ' ' . ($index + 1);
             $unitPrice = CurrencyServices::formatCurrency($product['base_price_per_unit_in_cents'], $orderable->getCurrency());
             $totalPrice = CurrencyServices::formatCurrency($product['base_total_in_cents'], $orderable->getCurrency());
-            $sku = $product['productible_sku'] ? sprintf('SKU: %s', $product['productible_sku']) : '';
+            $skuPrefix = $product['productible_sku'] ? sprintf('SKU: [%s] ', $product['productible_sku']) : '';
 
-            $productProperties[$sku ?? $productKey] = sprintf(
-                __('%s (Qty: %d) - %s each, Total: %s'),
+            $productProperties[$productKey] = sprintf(
+                __('%s%s (Qty: %d) - %s each, Total: %s'),
+                $skuPrefix,
                 $product['productible_name'],
                 $product['quantity'],
                 $unitPrice,

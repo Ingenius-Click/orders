@@ -11,6 +11,7 @@ use Ingenius\Core\Traits\RegistersMigrations;
 use Ingenius\Orders\Features\ListInvoicesFeature;
 use Ingenius\Orders\Features\ViewInvoiceFeature;
 use Ingenius\Orders\Features\ExportInvoiceFeature;
+use Ingenius\Orders\Features\ExportOrderFeature;
 use Ingenius\Orders\Models\Order;
 use Ingenius\Orders\Policies\OrderPolicy;
 use Ingenius\Orders\Services\OrderStatusManager;
@@ -32,6 +33,7 @@ use Ingenius\Orders\Services\InvoiceCreationManager;
 use Ingenius\Orders\Strategies\DefaultInvoiceCreationStrategy;
 use Ingenius\Orders\InvoiceData\OrderInvoiceDataProvider;
 use Ingenius\Orders\Services\InvoicePdfService;
+use Ingenius\Orders\Services\OrderPdfService;
 use Ingenius\Orders\Extensions\CurrencyOrderExtension;
 
 class OrdersServiceProvider extends ServiceProvider
@@ -110,6 +112,11 @@ class OrdersServiceProvider extends ServiceProvider
             return new InvoicePdfService();
         });
 
+        // Register the order PDF service as a singleton
+        $this->app->singleton(OrderPdfService::class, function ($app) {
+            return new OrderPdfService();
+        });
+
         // Register settings classes with the core settings system
         $this->registerSettingsClasses();
 
@@ -128,6 +135,7 @@ class OrdersServiceProvider extends ServiceProvider
             $manager->register(new ViewOrderFeature());
             $manager->register(new CreateOrderFeature());
             $manager->register(new UpdateOrderFeature());
+            $manager->register(new ExportOrderFeature());
         });
 
         $this->app->afterResolving(PackageHookManager::class, function (PackageHookManager $manager) {

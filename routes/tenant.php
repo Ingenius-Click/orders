@@ -30,6 +30,7 @@ Route::middleware([
             Route::get('/', [OrdersController::class, 'index'])->middleware('tenant.has.feature:list-orders');
             Route::delete('/{id}', [OrdersController::class, 'destroy'])->middleware('tenant.has.feature:update-order');
             Route::put('/{id}/change-status', [OrdersController::class, 'changeStatus'])->middleware('tenant.has.feature:update-order');
+            Route::get('/{id}/download-pdf', [OrdersController::class, 'downloadPdf'])->middleware('tenant.has.feature:export-order');
         });
 
         Route::post('/', [OrdersController::class, 'store'])
