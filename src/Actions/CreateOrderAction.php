@@ -13,6 +13,7 @@ use Ingenius\Core\Services\SequenceGeneratorService;
 use Ingenius\Orders\Enums\OrderStatusEnum;
 use Ingenius\Orders\Events\OrderCreatedEvent;
 use Ingenius\Orders\Exceptions\NoProductsFoundException;
+use Ingenius\Orders\Exceptions\OrderFinalizationFailedException;
 use Ingenius\Orders\Models\Order;
 use Ingenius\Orders\Http\Requests\CreateOrderRequest;
 use Ingenius\Orders\Services\OrderExtensionManager;
@@ -51,6 +52,9 @@ class CreateOrderAction
         $currency = $validated['currency'] ?? get_current_currency();
         $baseCurrency = CurrencyServices::getBaseCurrencyShortName();
 
+        // Phase 1: everything that belongs in a database transaction. No calls
+        // to external services happen here — an unanswered HTTP request would
+        // hold this transaction, and its row locks, open indefinitely.
         DB::beginTransaction();
 
         try {
@@ -60,24 +64,8 @@ class CreateOrderAction
             $products = $productsData['products'];
             $shopCart = $productsData['shopCart'];
 
-            // When the order is created from the user's own cart, exclude that user's
-            // cart items from the stock reservation check so their reservation does not
-            // block their own order creation.
-            $cartExclusionContext = [];
-            if ($shopCart !== null) {
-                $user = AuthHelper::getUser();
-                $guestToken = request()->header('X-Guest-Token');
-
-                if ($user) {
-                    $cartExclusionContext['exclude_cart_owner_id'] = $user->id;
-                    $cartExclusionContext['exclude_cart_owner_type'] = get_class($user);
-                } elseif ($guestToken) {
-                    $cartExclusionContext['exclude_cart_guest_token'] = $guestToken;
-                }
-            }
-
             $productPriceOverrides = $isManual ? ($validated['product_price_overrides'] ?? []) : [];
-            $itemsSubtotal = $this->processProducts($order, $products, $productibleModel, $productPriceOverrides, $cartExclusionContext);
+            $itemsSubtotal = $this->processProducts($order, $products, $productibleModel, $productPriceOverrides);
 
             $order->update(['items_subtotal' => $itemsSubtotal]);
             $order->save();
@@ -100,26 +88,108 @@ class CreateOrderAction
             $finalTotal = $extensionResults['context']['total'] ?? $itemsSubtotal;
             $order->update(['total_amount' => $finalTotal]);
 
-            if ($emitEvents) {
-                event(new OrderCreatedEvent($order));
-            }
+            // Captured before clearing so the cart can be put back if phase 2 fails.
+            $restorableCartItems = $shopCart ? $this->describeOrderItems($order) : [];
 
             if ($shopCart) {
                 $shopCart->clearCart();
             }
 
             DB::commit();
-
-            // Return the order with extension results
-            return [
-                'order' => $order->fresh('products'),
-                'extension_results' => $extensionResults
-            ];
         } catch (\Exception $e) {
             Log::error('Error creating order: ' . $e->getMessage());
             DB::rollBack();
             throw $e;
         }
+
+        // Phase 2: external work, with the order already durable. Failures here
+        // cannot be rolled back, so they are compensated instead.
+        try {
+            $finalizeResults = $this->extensionManager->finalizeOrder($order, $validated, $extensionResults['context']);
+        } catch (OrderFinalizationFailedException $e) {
+            Log::error('Order finalization failed, compensating order: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'extension' => $e->extensionName,
+            ]);
+
+            $this->compensateOrder($order, $shopCart, $restorableCartItems);
+
+            throw $e;
+        }
+
+        foreach ($finalizeResults as $extensionName => $result) {
+            $extensionResults['results'][$extensionName] = array_merge(
+                $extensionResults['results'][$extensionName] ?? [],
+                $result,
+            );
+        }
+
+        // Emitted only once the order is known to stand: listeners notify the
+        // customer, and a compensated order must not generate that notification.
+        if ($emitEvents) {
+            event(new OrderCreatedEvent($order));
+        }
+
+        // Return the order with extension results
+        return [
+            'order' => $order->fresh('products'),
+            'extension_results' => $extensionResults
+        ];
+    }
+
+    /**
+     * Undo a committed order whose finalization failed.
+     *
+     * Cancelling releases the stock the order was holding, since reservations
+     * are counted from orders in the NEW status.
+     *
+     * @param Order $order The order to cancel
+     * @param mixed $shopCart The cart the order was built from, if any
+     * @param array $restorableCartItems Items to put back into that cart
+     * @return void
+     */
+    private function compensateOrder(Order $order, $shopCart, array $restorableCartItems): void
+    {
+        try {
+            $order->transitionTo(OrderStatusEnum::CANCELLED->value);
+        } catch (\Exception $e) {
+            Log::error('Failed to cancel order during compensation', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // The cart model is resolved from config and may not support restoring;
+        // losing the cart is worse UX than a failed checkout but not fatal.
+        if ($shopCart && $restorableCartItems && method_exists($shopCart, 'restoreItems')) {
+            try {
+                $shopCart->restoreItems($restorableCartItems);
+            } catch (\Exception $e) {
+                Log::error('Failed to restore cart during compensation', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Describe an order's products in the shape the cart needs to restore them.
+     *
+     * @param Order $order
+     * @return array
+     */
+    private function describeOrderItems(Order $order): array
+    {
+        return $order->products()->get()->map(function ($orderProduct) {
+            return [
+                'productible_type' => $orderProduct->productible_type,
+                'productible_id' => $orderProduct->productible_id,
+                'quantity' => $orderProduct->quantity,
+            ];
+        })->all();
     }
 
     /**

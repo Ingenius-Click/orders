@@ -16,6 +16,7 @@ use Ingenius\Orders\Actions\GetOrderAction;
 use Ingenius\Orders\Actions\MyOrdersAction;
 use Ingenius\Orders\Exceptions\InvalidStatusTransitionException;
 use Ingenius\Orders\Exceptions\NoProductsFoundException;
+use Ingenius\Orders\Exceptions\OrderFinalizationFailedException;
 use Ingenius\Orders\Http\Requests\ChangeOrderStatusRequest;
 use Ingenius\Orders\Http\Requests\CreateOrderRequest;
 use Ingenius\Orders\Models\Order;
@@ -65,6 +66,13 @@ class OrdersController extends Controller
                 'message' => $e->getMessage(),
                 'data' => null
             ], 400);
+        } catch (OrderFinalizationFailedException $e) {
+            // The order was created and then compensated: nothing stands and the
+            // cart is back, so this reads to the client as a failed checkout.
+            return response()->json([
+                'message' => $e->getMessage(),
+                'data' => null
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage(),

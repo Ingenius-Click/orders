@@ -3,6 +3,7 @@
 namespace Ingenius\Orders\Services;
 
 use Illuminate\Http\Request;
+use Ingenius\Orders\Interfaces\DeferredOrderExtensionInterface;
 use Ingenius\Orders\Interfaces\OrderExtensionInterface;
 use Ingenius\Orders\Models\Order;
 
@@ -86,6 +87,38 @@ class OrderExtensionManager
             'results' => $results,
             'context' => $context,
         ];
+    }
+
+    /**
+     * Run the post-commit step of every extension that declares one.
+     *
+     * Called after the order transaction has been committed, so extensions can
+     * safely perform external work here without holding the transaction open.
+     *
+     * @param Order $order The committed order
+     * @param array $validatedData The validated request data
+     * @param array $context The context produced by processOrder()
+     * @return array Results keyed by extension name, to be merged over the processOrder() results
+     *
+     * @throws \Ingenius\Orders\Exceptions\OrderFinalizationFailedException If an extension requires the order to be compensated
+     */
+    public function finalizeOrder(Order $order, array $validatedData, array $context): array
+    {
+        $results = [];
+
+        foreach ($this->extensions as $extension) {
+            if (!$extension instanceof DeferredOrderExtensionInterface) {
+                continue;
+            }
+
+            $extensionResult = $extension->finalizeOrder($order, $validatedData, $context);
+
+            if (!empty($extensionResult)) {
+                $results[$extension->getName()] = $extensionResult;
+            }
+        }
+
+        return $results;
     }
 
     /**
